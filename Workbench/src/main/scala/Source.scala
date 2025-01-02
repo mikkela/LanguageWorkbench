@@ -96,10 +96,10 @@ case class OffsetSourcePosition(source: String, offset: Int) extends SourcePosit
 private object OffsetSourcePosition extends scala.runtime.AbstractFunction2[String, Int, OffsetSourcePosition] with SourcePositionCache
 
 private trait SourcePositionCache:
-  private lazy val indexCacheTL: ThreadLocal[java.util.Map[CharSequence, Array[Int]]] =
+  private lazy val indexCacheTL: ThreadLocal[java.util.Map[String, Array[Int]]] =
     // not DynamicVariable as that would share the map from parent to child :-(
-    new ThreadLocal[java.util.Map[CharSequence, Array[Int]]] {
-      override def initialValue = new java.util.WeakHashMap[CharSequence, Array[Int]]
+    new ThreadLocal[java.util.Map[String, Array[Int]]] {
+      override def initialValue = new java.util.WeakHashMap[String, Array[Int]]
     }
 
-  def indexCache: java.util.Map[CharSequence, Array[Int]] = indexCacheTL.get
+  def indexCache: java.util.Map[String, Array[Int]] = indexCacheTL.get

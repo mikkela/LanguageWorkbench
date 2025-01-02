@@ -1,6 +1,6 @@
 package org.mikadocs.language.workbench
 
-class SourceTest extends munit.FunSuite{
+class SourceReaderTest extends munit.FunSuite{
   test("SourceReader initial state") {
     val sourceString = "Hello, World!"
     val reader = SourceReader(sourceString)
