@@ -2,18 +2,26 @@ package org.mikadocs.language.workbench
 
 case class SourceReading(current: Char, next: SourceReader)
 
-case class SourceReader private(source: String, private val offset: Int):
-  private final val endOfSourceReading = SourceReading(SourceReader.EndOfSource, this)
-  def read: SourceReading =
-    if !atEndOfSource then
-      SourceReading(source(offset), SourceReader(source, offset + 1))
-    else
-      endOfSourceReading
-  def position: SourcePosition = OffsetSourcePosition(source, offset)
-  def atEndOfSource: Boolean = offset >= source.length
+trait SourceReader:
+  def read: SourceReading
+  def position: SourcePosition
+  def atEndOfSource: Boolean
+
 object SourceReader:
   final val EndOfSource: Char = '\u001a'
-  def apply(source: String): SourceReader = SourceReader(source, 0)
+
+  def apply(source: String): SourceReader = SourceReaderImpl(source, 0)
+
+private class SourceReaderImpl(val source: String, private val offset: Int) extends SourceReader:
+  private final val endOfSourceReading = SourceReading(SourceReader.EndOfSource, this)
+  override def read: SourceReading =
+    if !atEndOfSource then
+      SourceReading(source(offset), SourceReaderImpl(source, offset + 1))
+    else
+      endOfSourceReading
+  override def position: SourcePosition = OffsetSourcePosition(source, offset)
+  override def atEndOfSource: Boolean = offset >= source.length
+
 
 trait SourcePosition:
   /** The line number referred to by the position; line numbers start at 1. */

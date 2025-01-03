@@ -29,6 +29,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     val iterator = sut.scan(SourceReader("another"))
 
     assertEquals(iterator.next(), TestToken("another", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -41,6 +42,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
 
     assertEquals(iterator.next(), TestToken("an", createSourcePosition(1, 1)))
     assertEquals(iterator.next(), TestToken("other", createSourcePosition(1, 3)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -52,6 +54,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     val iterator = sut.scan(SourceReader("another"))
 
     assertEquals(iterator.next(), TestToken("another", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -63,6 +66,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     val iterator = sut.scan(SourceReader("another"))
 
     assertEquals(iterator.next(), TestToken("another!", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -71,6 +75,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     val iterator = sut.scan(SourceReader("another"))
 
     assertEquals(iterator.next(), ErrorToken("another", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -83,6 +88,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
 
     assertEquals(iterator.next(), ErrorToken("an", createSourcePosition(1, 1)))
     assertEquals(iterator.next(), TestToken("other", createSourcePosition(1, 3)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -97,6 +103,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.next(), TestToken("an", createSourcePosition(1, 1)))
     assertEquals(iterator.next(), ErrorToken("ot", createSourcePosition(1, 3)))
     assertEquals(iterator.next(), TestToken("her", createSourcePosition(1, 5)))
+    assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
 
@@ -104,6 +111,20 @@ class RuleBasedScannerTest extends munit.FunSuite {
     val sut = RuleBasedScanner(Seq(createRule(_ => true)))
     val iterator = sut.scan(SourceReader(""))
 
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+    assertEquals(iterator.next(), EndOfFileToken)
+  }
+
+  test("scans whitespaces into relevant tokens by default") {
+    val sut = RuleBasedScanner(Seq.empty)
+    val iterator = sut.scan(SourceReader(" \t \n "))
+
+    assertEquals(iterator.next(), SpaceToken(createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), TabToken(createSourcePosition(1, 2)))
+    assertEquals(iterator.next(), SpaceToken(createSourcePosition(1, 3)))
+    assertEquals(iterator.next(), NewlineToken(createSourcePosition(1, 4)))
+    assertEquals(iterator.next(), SpaceToken(createSourcePosition(2, 1)))
     assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
