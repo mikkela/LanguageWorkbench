@@ -4,8 +4,9 @@ import org.mikadocs.language.workbench.{SourcePosition, Token}
 
 case class IdentifierToken(lexeme: String, position: SourcePosition) extends Token
 case class NumberToken(lexeme: String, position: SourcePosition) extends Token
-abstract class PunctuationToken(val lexeme: String, val position: SourcePosition) extends Token
+case class StringToken(lexeme: String, position: SourcePosition) extends Token
 
+abstract class PunctuationToken(val lexeme: String, val position: SourcePosition) extends Token
 case class DotToken(override val position: SourcePosition) extends PunctuationToken(DotToken.dot, position)
 object DotToken:
   final val dot = "."
@@ -57,3 +58,50 @@ object GreaterToken:
 case class SlashToken(override val position: SourcePosition) extends PunctuationToken(SlashToken.slash, position)
 object SlashToken:
   final val slash = "/"
+
+abstract class KeywordToken(val lexeme: String, val position: SourcePosition) extends Token
+case class AndToken(override val position: SourcePosition) extends KeywordToken(AndToken.and, position)
+object AndToken:
+  final val and = "and"
+case class ClassToken(override val position: SourcePosition) extends KeywordToken(ClassToken._class, position)
+object ClassToken:
+  final val _class = "class"
+case class ElseToken(override val position: SourcePosition) extends KeywordToken(ElseToken._else, position)
+object ElseToken:
+  final val _else = "else"
+case class FalseToken(override val position: SourcePosition) extends KeywordToken(FalseToken._false, position)
+object FalseToken:
+  final val _false = "false"
+case class ForToken(override val position: SourcePosition) extends KeywordToken(ForToken._for, position)
+object ForToken:
+  final val _for = "for"
+case class FunToken(override val position: SourcePosition) extends KeywordToken(FunToken.fun, position)
+object FunToken:
+  final val fun = "fun"
+case class IfToken(override val position: SourcePosition) extends KeywordToken(IfToken._if, position)
+object IfToken:
+  final val _if = "if"
+case class NilToken(override val position: SourcePosition) extends KeywordToken(NilToken.nil, position)
+object NilToken:
+  final val nil = "nil"
+case class OrToken(override val position: SourcePosition) extends KeywordToken(OrToken.or, position)
+object OrToken:
+  final val or = "or"
+case class ReturnToken(override val position: SourcePosition) extends KeywordToken(ReturnToken._return, position)
+object ReturnToken:
+  final val _return = "return"
+case class SuperToken(override val position: SourcePosition) extends KeywordToken(SuperToken._super, position)
+object SuperToken:
+  final val _super = "super"
+case class ThisToken(override val position: SourcePosition) extends KeywordToken(ThisToken._this, position)
+object ThisToken:
+  final val _this = "this"
+case class TrueToken(override val position: SourcePosition) extends KeywordToken(TrueToken._true, position)
+object TrueToken:
+  final val _true = "true"
+case class VarToken(override val position: SourcePosition) extends KeywordToken(VarToken._var, position)
+object VarToken:
+  final val _var = "var"
+case class WhileToken(override val position: SourcePosition) extends KeywordToken(WhileToken._while, position)
+object WhileToken:
+  final val _while = "while"

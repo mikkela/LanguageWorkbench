@@ -68,4 +68,51 @@ class LoxScannerTest extends munit.FunSuite{
     assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
+
+  test("Scan for strings") {
+    val sut = LoxScanner()
+
+    val iterator = sut.scan(SourceReader("\"\"\n\"string\""))
+
+    assertEquals(iterator.next(), StringToken("", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), StringToken("string", createSourcePosition(2, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+  }
+
+  test("Scan and avoid for white spaces") {
+    val sut = LoxScanner()
+
+    val iterator = sut.scan(SourceReader("space    tabs\t\t\t\tnewlines\n\n\n\n\nend"))
+
+    assertEquals(iterator.next(), IdentifierToken("space", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), IdentifierToken("tabs", createSourcePosition(1, 10)))
+    assertEquals(iterator.next(), IdentifierToken("newlines", createSourcePosition(1, 18)))
+    assertEquals(iterator.next(), IdentifierToken("end", createSourcePosition(6, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+  }
+
+  test("Scan for keywords") {
+    val sut = LoxScanner()
+
+    val iterator = sut.scan(SourceReader("and class else false for fun if nil or return super this true var while"))
+    assertEquals(iterator.next(), AndToken(createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), ClassToken(createSourcePosition(1, 5)))
+    assertEquals(iterator.next(), ElseToken(createSourcePosition(1, 11)))
+    assertEquals(iterator.next(), FalseToken(createSourcePosition(1, 16)))
+    assertEquals(iterator.next(), ForToken(createSourcePosition(1, 22)))
+    assertEquals(iterator.next(), FunToken(createSourcePosition(1, 26)))
+    assertEquals(iterator.next(), IfToken(createSourcePosition(1, 30)))
+    assertEquals(iterator.next(), NilToken(createSourcePosition(1, 33)))
+    assertEquals(iterator.next(), OrToken(createSourcePosition(1, 37)))
+    assertEquals(iterator.next(), ReturnToken(createSourcePosition(1, 40)))
+    assertEquals(iterator.next(), SuperToken(createSourcePosition(1, 47)))
+    assertEquals(iterator.next(), ThisToken(createSourcePosition(1, 53)))
+    assertEquals(iterator.next(), TrueToken(createSourcePosition(1, 58)))
+    assertEquals(iterator.next(), VarToken(createSourcePosition(1, 63)))
+    assertEquals(iterator.next(), WhileToken(createSourcePosition(1, 67)))
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+  }
 }
