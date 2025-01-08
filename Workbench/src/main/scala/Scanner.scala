@@ -1,7 +1,12 @@
 package org.mikadocs.language.workbench
 
+import Acceptance.{Accepted, Rejected, Undecided}
+
 trait Scanner:
   def scan(source: SourceReader): Iterator[Token]
+
+extension (string: String)
+  def appended(sourceReading: SourceReading) = string.appended(sourceReading.current)
 
 abstract class FilteringScanner(val scanner: Scanner, val predicate: Token => Boolean) extends Scanner:
   private class TokenIterator(tokenIterator: Iterator[Token]) extends Iterator[Token]:
@@ -27,54 +32,98 @@ abstract class FilteringScanner(val scanner: Scanner, val predicate: Token => Bo
 
 class WhiteSpaceSkippingScanner(scanner: Scanner) extends FilteringScanner(scanner, token => !token.isInstanceOf[WhiteSpaceToken])
 
+enum Acceptance:
+  case Accepted, Rejected, Undecided
+
+trait ScannerRule:
+  def accept(s: String): Acceptance
+
+  def apply(s: String, position: SourcePosition): Token
+
 class RuleBasedScanner(ruleSet: Seq[ScannerRule]) extends Scanner:
-  val rules = Seq(NewlineScannerRule, TabScannerRule, SpaceScannerRule) ++ ruleSet
+  private val rules = Seq(NewlineScannerRule, TabScannerRule, SpaceScannerRule) ++ ruleSet
+
   private class TokenIterator(var sourceReader: SourceReader) extends Iterator[Token]:
+    private val lexemeScanner = LexemeScanner()
+    private class ErrorHandler:
+      private case class UndecidedState(undecidedText: String, sourceReader: SourceReader)
+      extension (obj: Option[UndecidedState])
+        private def text(): String = obj.map(_.undecidedText).getOrElse("")
+
+      private def isNotAccepted(s: String): Boolean =
+        rules.forall(_.accept(s) != Accepted)
+
+      private def isUndecided(s: String): Boolean =
+        rules.exists(_.accept(s) == Undecided)
+
+      def apply(errorString: String, errorPosition: SourcePosition): Token =
+        var error = errorString
+        var reading: SourceReading = sourceReader.read
+        var undecidedState:Option[UndecidedState] = None
+
+        while !sourceReader.atEndOfSource && isNotAccepted(undecidedState.text().appended(reading)) do
+          if isUndecided(undecidedState.text().appended(reading)) then
+            undecidedState = Some(
+              undecidedState.map(state => UndecidedState(state.undecidedText.appended(reading), state.sourceReader))
+                .getOrElse(UndecidedState("".appended(reading), sourceReader))
+            )
+          else
+            undecidedState = None
+          error = error.appended(reading)
+          sourceReader = reading.next
+          reading = sourceReader.read
+        undecidedState.foreach(state => sourceReader = state.sourceReader)
+        ErrorToken(error.substring(0, error.length - undecidedState.text().length), errorPosition)
+    private class LexemeScanner:
+      private case class AcceptedState(lexeme: String, sourceReader: SourceReader)
+
+      private def isNotRejected(s: String): Boolean =
+        rules.exists(_.accept(s) != Rejected)
+      private def isAccepted(s: String): Boolean =
+        rules.exists(_.accept(s) == Accepted)
+
+      private def createToken(lexeme: String, position: SourcePosition): Token =
+        rules.find(_.accept(lexeme) == Acceptance.Accepted).map(_.apply(lexeme, position)).getOrElse(ErrorToken(lexeme, position))
+
+      def apply(): Token =
+        var lexeme = ""
+        val initialPosition = sourceReader.position
+        var reading: SourceReading = sourceReader.read
+        var acceptedState: Option[AcceptedState] = None
+        while !sourceReader.atEndOfSource && isNotRejected(lexeme.appended(reading)) do
+          lexeme = lexeme.appended(reading)
+          sourceReader = reading.next
+          reading = sourceReader.read
+          if isAccepted(lexeme) then
+            acceptedState = Some(AcceptedState(lexeme, sourceReader))
+
+        acceptedState.map { state =>
+          sourceReader = state.sourceReader
+          createToken(state.lexeme, initialPosition)
+        }.getOrElse(ErrorHandler()(lexeme, initialPosition))
+
     private var hasMore = true
-    private def readWhile(condition: String => Boolean): String =
-      val sb = StringBuilder()
-      var reading: SourceReading = null
-      while
-        reading = sourceReader.read
-        sb += reading.current
-        condition(sb.toString()) && !sourceReader.atEndOfSource
-      do sourceReader = reading.next
-      sb.setLength(sb.length - 1)
-      sb.toString()
 
-    private def readLexeme(): String =
-      readWhile(lexeme => rules.exists(_.accept(lexeme)))
-
-    private def readUnrecognizedCharacters(): String =
-      readWhile(lexeme => !rules.exists(_.accept(lexeme.substring(lexeme.length - 1))))
     override def hasNext: Boolean  = hasMore
     override def next(): Token =
       if sourceReader.atEndOfSource then
         hasMore = false
         return EndOfFileToken
 
-      val position = sourceReader.position
-      val lexeme = readLexeme()
-      if lexeme.nonEmpty then
-        rules.find(_.accept(lexeme)).map(_.apply(lexeme, position)).getOrElse(ErrorToken(lexeme, position))
-      else
-        ErrorToken(readUnrecognizedCharacters(), position)
-  
+      lexemeScanner()
+
   override def scan(source: SourceReader): Iterator[Token] =
+
     new TokenIterator(source)
 
-trait ScannerRule:
-  def accept(s: String): Boolean
-  def apply(s: String, position: SourcePosition): Token
-
 object SpaceScannerRule extends ScannerRule:
-  override def accept(s: String): Boolean = s == " "
+  override def accept(s: String): Acceptance = if s == " " then Accepted else Rejected
   override def apply(s: String, position: SourcePosition): Token = SpaceToken(position)
 
 object TabScannerRule extends ScannerRule:
-  override def accept(s: String): Boolean = s == "\t"
+  override def accept(s: String): Acceptance = if s == "\t" then Accepted else Rejected
   override def apply(s: String, position: SourcePosition): Token = TabToken(position)
 
 object NewlineScannerRule extends ScannerRule:
-  override def accept(s: String): Boolean = s == "\n"
+  override def accept(s: String): Acceptance = if s == "\n" then Accepted else Rejected
   override def apply(s: String, position: SourcePosition): Token = NewlineToken(position)

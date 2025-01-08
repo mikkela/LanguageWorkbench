@@ -28,4 +28,18 @@ class LoxScannerTest extends munit.FunSuite{
     assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
   }
+
+  test("Scan for numbers") {
+    val sut = LoxScanner()
+
+    val iterator = sut.scan(SourceReader("123\n123.456\n.456\n123."))
+    assertEquals(iterator.next(), NumberToken("123", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), NumberToken("123.456", createSourcePosition(2, 1)))
+    assertEquals(iterator.next(), DotToken(".", createSourcePosition(3, 1)))
+    assertEquals(iterator.next(), NumberToken("456", createSourcePosition(3, 2)))
+    assertEquals(iterator.next(), NumberToken("123", createSourcePosition(4, 1)))
+    assertEquals(iterator.next(), DotToken(".", createSourcePosition(4, 4)))
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+  }
 }

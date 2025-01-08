@@ -1,5 +1,7 @@
 package org.mikadocs.language.workbench
 
+import Acceptance.{Accepted, Rejected, Undecided}
+
 class RuleBasedScannerTest extends munit.FunSuite {
   // Helper case classes for test tokens and positions
   case class TestToken(lexeme: String, position: SourcePosition) extends Token
@@ -18,13 +20,43 @@ class RuleBasedScannerTest extends munit.FunSuite {
                   accepts: String => Boolean,
                   transform: String => String = identity
                 ): ScannerRule = new ScannerRule {
-    override def accept(s: String): Boolean = accepts(s)
+    override def accept(s: String): Acceptance = if accepts(s) then Accepted else Rejected
 
     override def apply(s: String, position: SourcePosition): Token =
-      if accept(s) then TestToken(transform(s), position) else ErrorToken(s, position)
+      TestToken(transform(s), position)
   }
-  
-  test("scans the provided stream with a single matching rule") {
+
+  def createLookaheadRule(
+                           initialPartAccept: String => Boolean,
+                           lookaheadPartAccept: String => Boolean,
+                           finalPart: String => Boolean
+                         ): ScannerRule = new ScannerRule {
+    override def accept(s: String): Acceptance =
+      if initialPartAccept(s) then
+        Accepted
+      else
+        if lookaheadPartAccept(s) then
+          Undecided
+        else
+          if finalPart(s) then
+            Accepted
+          else
+            Rejected
+
+    override def apply(s: String, position: SourcePosition): Token =
+      TestToken(s, position)
+  }
+
+  test("scans empty string into EoF Token. This token wiull be returned for ever") {
+    val sut = RuleBasedScanner(Seq.empty)
+    val iterator = sut.scan(SourceReader(""))
+    assertEquals(iterator.hasNext, true)
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+    assertEquals(iterator.next(), EndOfFileToken)
+  }
+
+  test("scans the provided strean with a single matching rule matching a complete token") {
     val sut = RuleBasedScanner(Seq(createRule(_.startsWith("a"))))
     val iterator = sut.scan(SourceReader("another"))
 
@@ -33,7 +65,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.hasNext, false)
   }
 
-  test("scans the provided stream with mutually exclusive rules") {
+  test("scans the provided stream with mutually exclusive rules, providing a stream of tokens") {
     val sut = RuleBasedScanner(Seq(
       createRule("an".contains),
       createRule("other".contains)
@@ -46,7 +78,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.hasNext, false)
   }
 
-  test("selects the longest match when multiple rules apply") {
+  test("scans the provided stream with multiple matching rules, selects the longest match") {
     val sut = RuleBasedScanner(Seq(
       createRule("an".contains),
       createRule("another".contains)
@@ -58,7 +90,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.hasNext, false)
   }
 
-  test("selects the first matching rule when matches are equal") {
+  test("scans the provided stream with multiple matching rules, selects the first matching rule when multiple longest match") {
     val sut = RuleBasedScanner(Seq(
       createRule("another".contains, _ + "!"),
       createRule("another".contains)
@@ -70,7 +102,16 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.hasNext, false)
   }
 
-  test("scans the provided stream with a single non-matching rule") {
+  test("scans the provided stream with a single matching rule requiring look ahead") {
+    val sut = RuleBasedScanner(Seq(createLookaheadRule(_.equals("a"), _.equals("a."), _.equals("a.b"))))
+    val iterator = sut.scan(SourceReader("a.b"))
+
+    assertEquals(iterator.next(), TestToken("a.b", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+  }
+
+  test("scans the provided stream with a single non-matching rule, the rejected characters are consumed and returned as an error") {
     val sut = RuleBasedScanner(Seq(createRule(_.startsWith("b"))))
     val iterator = sut.scan(SourceReader("another"))
 
@@ -107,13 +148,38 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.hasNext, false)
   }
 
-  test("scans empty stream with a single matching rule") {
-    val sut = RuleBasedScanner(Seq(createRule(_ => true)))
-    val iterator = sut.scan(SourceReader(""))
+ test("scans the provided stream with a single matching rule requiring look ahead that fails") {
+    val sut = RuleBasedScanner(Seq(createLookaheadRule(_.equals("a"), _.equals("a."), _.equals("a.b"))))
+    val iterator = sut.scan(SourceReader("a.c"))
 
+    assertEquals(iterator.next(), TestToken("a", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), ErrorToken(".c", createSourcePosition(1, 2)))
     assertEquals(iterator.next(), EndOfFileToken)
     assertEquals(iterator.hasNext, false)
+  }
+
+  test("scans the provided stream with a single matching rule requiring look ahead that initially fails and then succeeds") {
+    val sut = RuleBasedScanner(Seq(createLookaheadRule(_.equals(""), _.equals("."), _.equals(".b"))))
+    val iterator = sut.scan(SourceReader("a.b"))
+
+    assertEquals(iterator.next(), ErrorToken("a", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), TestToken(".b", createSourcePosition(1, 2)))
     assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
+  }
+
+  test("scans the provided stream with multiple matching one with look ahead (failing), the other, shorter doesn't") {
+    val sut = RuleBasedScanner(Seq(
+      createRule(_.equals("a")),
+      createRule(_.equals(".")),
+      createLookaheadRule(_.equals("a"), _.equals("."), _.equals(".b")),
+    ))
+    val iterator = sut.scan(SourceReader("a."))
+
+    assertEquals(iterator.next(), TestToken("a", createSourcePosition(1, 1)))
+    assertEquals(iterator.next(), TestToken(".", createSourcePosition(1, 2)))
+    assertEquals(iterator.next(), EndOfFileToken)
+    assertEquals(iterator.hasNext, false)
   }
 
   test("scans whitespaces into relevant tokens by default") {
