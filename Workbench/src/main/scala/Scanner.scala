@@ -127,3 +127,26 @@ object TabScannerRule extends ScannerRule:
 object NewlineScannerRule extends ScannerRule:
   override def accept(s: String): Acceptance = if s == "\n" then Accepted else Rejected
   override def apply(s: String, position: SourcePosition): Token = NewlineToken(position)
+
+abstract class StringMatchingRule(acceptedString: String, factory: (String, SourcePosition) => Token) extends ScannerRule:
+  override def accept(s: String): Acceptance = if s.equals(acceptedString) then Accepted else Rejected
+  override def apply(s: String, position: SourcePosition): Token = factory(s, position)
+
+abstract class StringLookaheadMatchingRule(acceptedString: String, undecidedStrings: Seq[String => Boolean], factory: (String, SourcePosition) => Token) extends ScannerRule:
+  override def accept(s: String): Acceptance =
+    if s.equals(acceptedString) then
+      Accepted
+    else if undecidedStrings.exists(_.apply(s)) then
+      Undecided
+    else
+      Rejected
+  override def apply(s: String, position: SourcePosition): Token = factory(s, position)
+object StringLookaheadMatchingRule:
+  private def allSubstrings(s: String): Seq[String] =
+    for {
+      start <- 0 until s.length
+      end <- (start + 1) to s.length
+    } yield s.substring(start, end)
+
+  def allSubstringsAsUndecided(s: String) =
+    allSubstrings(s).map(sub => (str: String) => str == sub)
