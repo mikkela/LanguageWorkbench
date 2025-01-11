@@ -2,6 +2,8 @@ package org.mikadocs.language.workbench
 
 import Acceptance.{Accepted, Rejected, Undecided}
 
+import org.mikadocs.language.workbench.PredefinedStringRequiringLookaheadMatchingRule.allSubstringsAsUndecided
+
 trait Scanner:
   def scan(source: SourceReader): Iterator[Token]
 
@@ -128,11 +130,13 @@ object NewlineScannerRule extends ScannerRule:
   override def accept(s: String): Acceptance = if s == "\n" then Accepted else Rejected
   override def apply(s: String, position: SourcePosition): Token = NewlineToken(position)
 
-abstract class StringMatchingRule(acceptedString: String, factory: (String, SourcePosition) => Token) extends ScannerRule:
+abstract class PredefinedStringMatchingRule(acceptedString: String, factory: SourcePosition => Token) extends ScannerRule:
   override def accept(s: String): Acceptance = if s.equals(acceptedString) then Accepted else Rejected
-  override def apply(s: String, position: SourcePosition): Token = factory(s, position)
+  override def apply(s: String, position: SourcePosition): Token = factory(position)
 
-abstract class StringLookaheadMatchingRule(acceptedString: String, undecidedStrings: Seq[String => Boolean], factory: (String, SourcePosition) => Token) extends ScannerRule:
+
+abstract class PredefinedStringRequiringLookaheadMatchingRule(acceptedString: String, factory: SourcePosition => Token) extends ScannerRule:
+  private val undecidedStrings: Seq[String => Boolean] = allSubstringsAsUndecided(acceptedString)
   override def accept(s: String): Acceptance =
     if s.equals(acceptedString) then
       Accepted
@@ -140,8 +144,8 @@ abstract class StringLookaheadMatchingRule(acceptedString: String, undecidedStri
       Undecided
     else
       Rejected
-  override def apply(s: String, position: SourcePosition): Token = factory(s, position)
-object StringLookaheadMatchingRule:
+  override def apply(s: String, position: SourcePosition): Token = factory(position)
+object PredefinedStringRequiringLookaheadMatchingRule:
   private def allSubstrings(s: String): Seq[String] =
     for {
       start <- 0 until s.length

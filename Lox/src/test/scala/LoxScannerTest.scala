@@ -1,4 +1,5 @@
-package org.mikadocs.language.lox
+package org.mikadocs.language
+package lox
 
 import org.mikadocs.language.workbench.{EndOfFileToken, SourcePosition, SourceReader}
 
