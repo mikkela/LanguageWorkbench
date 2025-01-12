@@ -2,7 +2,7 @@ package org.mikadocs.language
 package lox
 
 import org.mikadocs.language.workbench.Acceptance.{Accepted, Rejected, Undecided}
-import org.mikadocs.language.workbench.{Acceptance, RuleBasedScanner, PredefinedStringMatchingRule, PredefinedStringRequiringLookaheadMatchingRule, ScannerRule, SourcePosition, Token, WhiteSpaceSkippingScanner}
+import org.mikadocs.language.workbench.{Acceptance, RuleBasedScanner, PredefinedStringMatchingRule, ScannerRule, SourcePosition, Token, WhiteSpaceSkippingScanner}
 
 private def isAlpha(c: Char): Boolean = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
 private def isDigit(c: Char): Boolean = c >= '0' && c <= '9'
@@ -48,10 +48,10 @@ object PlusRule extends PredefinedStringMatchingRule(PlusToken.plus, p => PlusTo
 object MinusRule extends PredefinedStringMatchingRule(MinusToken.minus, p => MinusToken(p))
 object StarRule extends PredefinedStringMatchingRule(StarToken.star, p => StarToken(p))
 object SlashRule extends PredefinedStringMatchingRule(SlashToken.slash, p => SlashToken(p))
-object BangEqualRule extends PredefinedStringRequiringLookaheadMatchingRule(BangEqualToken.bangEqual, p => BangEqualToken(p))
-object EqualEqualRule extends PredefinedStringRequiringLookaheadMatchingRule(EqualEqualToken.equalEqual, p => EqualEqualToken(p))
-object LessEqualRule extends PredefinedStringRequiringLookaheadMatchingRule(LessEqualToken.lessEqual, p => LessEqualToken(p))
-object GreaterEqualRule extends PredefinedStringRequiringLookaheadMatchingRule(GreaterEqualToken.greaterEqual, p => GreaterEqualToken(p))
+object BangEqualRule extends PredefinedStringMatchingRule(BangEqualToken.bangEqual, p => BangEqualToken(p))
+object EqualEqualRule extends PredefinedStringMatchingRule(EqualEqualToken.equalEqual, p => EqualEqualToken(p))
+object LessEqualRule extends PredefinedStringMatchingRule(LessEqualToken.lessEqual, p => LessEqualToken(p))
+object GreaterEqualRule extends PredefinedStringMatchingRule(GreaterEqualToken.greaterEqual, p => GreaterEqualToken(p))
 object LessRule extends PredefinedStringMatchingRule(LessToken.less, p => LessToken(p))
 object GreaterRule extends PredefinedStringMatchingRule(GreaterToken.greater, p => GreaterToken(p))
 

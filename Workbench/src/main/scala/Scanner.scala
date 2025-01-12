@@ -2,8 +2,6 @@ package org.mikadocs.language.workbench
 
 import Acceptance.{Accepted, Rejected, Undecided}
 
-import org.mikadocs.language.workbench.PredefinedStringRequiringLookaheadMatchingRule.allSubstringsAsUndecided
-
 trait Scanner:
   def scan(source: SourceReader): Iterator[Token]
 
@@ -131,12 +129,7 @@ object NewlineScannerRule extends ScannerRule:
   override def apply(s: String, position: SourcePosition): Token = NewlineToken(position)
 
 abstract class PredefinedStringMatchingRule(acceptedString: String, factory: SourcePosition => Token) extends ScannerRule:
-  override def accept(s: String): Acceptance = if s.equals(acceptedString) then Accepted else Rejected
-  override def apply(s: String, position: SourcePosition): Token = factory(position)
-
-
-abstract class PredefinedStringRequiringLookaheadMatchingRule(acceptedString: String, factory: SourcePosition => Token) extends ScannerRule:
-  private val undecidedStrings: Seq[String => Boolean] = allSubstringsAsUndecided(acceptedString)
+  private val undecidedStrings: Seq[String => Boolean] = PredefinedStringMatchingRule.allSubstringsAsUndecided(acceptedString)
   override def accept(s: String): Acceptance =
     if s.equals(acceptedString) then
       Accepted
@@ -145,7 +138,7 @@ abstract class PredefinedStringRequiringLookaheadMatchingRule(acceptedString: St
     else
       Rejected
   override def apply(s: String, position: SourcePosition): Token = factory(position)
-object PredefinedStringRequiringLookaheadMatchingRule:
+object PredefinedStringMatchingRule:
   private def allSubstrings(s: String): Seq[String] =
     for {
       start <- 0 until s.length
@@ -153,4 +146,4 @@ object PredefinedStringRequiringLookaheadMatchingRule:
     } yield s.substring(start, end)
 
   def allSubstringsAsUndecided(s: String) =
-    allSubstrings(s).map(sub => (str: String) => str == sub)
+    allSubstrings(s).filter(p => !p.equals(s)).map(sub => (str: String) => str == sub)
