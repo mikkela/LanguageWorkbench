@@ -32,4 +32,12 @@ lazy val lox = (project in file("lox"))
   )
   .dependsOn(workbench)
 
+lazy val kamin = (project in file("kamin"))
+  .settings(
+    name := "Kamin",
+    idePackagePrefix := Some("org.mikadocs.language.kamin"),
+    libraryDependencies ++= scalaTestDeps,
+  )
+  .dependsOn(workbench)
+
 libraryDependencies += "org.scalameta" %% "munit" % "1.0.3" % Test
