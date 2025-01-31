@@ -6,7 +6,7 @@ trait Scanner:
   def scan(source: SourceReader): Iterator[Token]
 
 extension (string: String)
-  def appended(sourceReading: SourceReading) = string.appended(sourceReading.current)
+  def add(sourceReading: SourceReading): String = string.appended(sourceReading.current)
 
 abstract class FilteringScanner(val scanner: Scanner, val predicate: Token => Boolean) extends Scanner:
   private class TokenIterator(tokenIterator: Iterator[Token]) extends Iterator[Token]:
@@ -61,15 +61,15 @@ class RuleBasedScanner(ruleSet: Seq[ScannerRule]) extends Scanner:
         var reading: SourceReading = sourceReader.read
         var undecidedState:Option[UndecidedState] = None
 
-        while !sourceReader.atEndOfSource && isNotAccepted(undecidedState.text().appended(reading)) do
-          if isUndecided(undecidedState.text().appended(reading)) then
+        while !sourceReader.atEndOfSource && isNotAccepted(undecidedState.text().add(reading)) do
+          if isUndecided(undecidedState.text().add(reading)) then
             undecidedState = Some(
-              undecidedState.map(state => UndecidedState(state.undecidedText.appended(reading), state.sourceReader))
-                .getOrElse(UndecidedState("".appended(reading), sourceReader))
+              undecidedState.map(state => UndecidedState(state.undecidedText.add(reading), state.sourceReader))
+                .getOrElse(UndecidedState("".add(reading), sourceReader))
             )
           else
             undecidedState = None
-          error = error.appended(reading)
+          error = error.add(reading)
           sourceReader = reading.next
           reading = sourceReader.read
         undecidedState.foreach(state => sourceReader = state.sourceReader)
@@ -87,11 +87,11 @@ class RuleBasedScanner(ruleSet: Seq[ScannerRule]) extends Scanner:
 
       def apply(): Token =
         var lexeme = ""
-        val initialPosition = sourceReader.position
         var reading: SourceReading = sourceReader.read
+        val initialPosition = sourceReader.position
         var acceptedState: Option[AcceptedState] = None
-        while !sourceReader.atEndOfSource && isNotRejected(lexeme.appended(reading)) do
-          lexeme = lexeme.appended(reading)
+        while !sourceReader.atEndOfSource && isNotRejected(lexeme.add(reading)) do
+          lexeme = lexeme.add(reading)
           sourceReader = reading.next
           reading = sourceReader.read
           if isAccepted(lexeme) then
@@ -145,5 +145,5 @@ object PredefinedStringMatchingRule:
       end <- (start + 1) to s.length
     } yield s.substring(start, end)
 
-  def allSubstringsAsUndecided(s: String) =
+  def allSubstringsAsUndecided(s: String): Seq[String => Boolean] =
     allSubstrings(s).filter(p => !p.equals(s)).map(sub => (str: String) => str == sub)

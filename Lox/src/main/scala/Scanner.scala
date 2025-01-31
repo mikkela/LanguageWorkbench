@@ -10,9 +10,9 @@ private def isAlphaNumeric(c: Char): Boolean = isAlpha(c) || isDigit(c)
 
 object StringRule extends ScannerRule:
   override def accept(s: String): Acceptance =
-    if """\"([^\"]*)\"""".r matches s then
+    if """"([^"]*)"""".r matches s then
       Accepted
-    else if """\"([^\"]*)""".r matches s then
+    else if """"([^"]*)""".r matches s then
       Undecided
     else
       Rejected
@@ -49,7 +49,9 @@ object MinusRule extends PredefinedStringMatchingRule(MinusToken.minus, p => Min
 object StarRule extends PredefinedStringMatchingRule(StarToken.star, p => StarToken(p))
 object SlashRule extends PredefinedStringMatchingRule(SlashToken.slash, p => SlashToken(p))
 object BangEqualRule extends PredefinedStringMatchingRule(BangEqualToken.bangEqual, p => BangEqualToken(p))
+object BangRule extends PredefinedStringMatchingRule(BangToken.bang, p => BangToken(p))
 object EqualEqualRule extends PredefinedStringMatchingRule(EqualEqualToken.equalEqual, p => EqualEqualToken(p))
+object EqualRule extends PredefinedStringMatchingRule(EqualToken.equal, p => EqualToken(p))
 object LessEqualRule extends PredefinedStringMatchingRule(LessEqualToken.lessEqual, p => LessEqualToken(p))
 object GreaterEqualRule extends PredefinedStringMatchingRule(GreaterEqualToken.greaterEqual, p => GreaterEqualToken(p))
 object LessRule extends PredefinedStringMatchingRule(LessToken.less, p => LessToken(p))
@@ -87,6 +89,8 @@ class LoxScanner extends WhiteSpaceSkippingScanner(RuleBasedScanner(Seq(
   SlashRule,
   BangEqualRule,
   EqualEqualRule,
+  BangRule,
+  EqualRule,
   LessEqualRule,
   GreaterEqualRule,
   LessRule,

@@ -3,18 +3,6 @@ package org.mikadocs.language.workbench
 import Acceptance.{Accepted, Rejected, Undecided}
 
 class RuleBasedScannerTest extends munit.FunSuite {
-  // Helper case classes for test tokens and positions
-  case class TestToken(lexeme: String, position: SourcePosition) extends Token
-
-  // Helper for creating a simple SourcePosition
-  def createSourcePosition(l: Int, c: Int): SourcePosition = new SourcePosition {
-    override def line: Int = l
-
-    override def column: Int = c
-
-    override def lineContents: String = ""
-  }
-
   // Helper for creating a ScannerRule
   def createRule(
                   accepts: String => Boolean,
@@ -148,7 +136,7 @@ class RuleBasedScannerTest extends munit.FunSuite {
     assertEquals(iterator.hasNext, false)
   }
 
- test("scans the provided stream with a single matching rule requiring look ahead that fails") {
+  test("scans the provided stream with a single matching rule requiring look ahead that fails") {
     val sut = RuleBasedScanner(Seq(createLookaheadRule(_.equals("a"), _.equals("a."), _.equals("a.b"))))
     val iterator = sut.scan(SourceReader("a.c"))
 

@@ -15,10 +15,7 @@ object SourceReader:
 private class SourceReaderImpl(val source: String, private val offset: Int) extends SourceReader:
   private final val endOfSourceReading = SourceReading(SourceReader.EndOfSource, this)
   override def read: SourceReading =
-    if !atEndOfSource then
-      SourceReading(source(offset), SourceReaderImpl(source, offset + 1))
-    else
-      endOfSourceReading
+    if !atEndOfSource then SourceReading(source(offset), SourceReaderImpl(source, offset + 1)) else endOfSourceReading
   override def position: SourcePosition = OffsetSourcePosition(source, offset)
   override def atEndOfSource: Boolean = offset >= source.length
 

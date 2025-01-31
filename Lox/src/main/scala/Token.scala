@@ -41,6 +41,12 @@ object StarToken:
 case class BangEqualToken(override val position: SourcePosition) extends PunctuationToken(BangEqualToken.bangEqual, position)
 object BangEqualToken:
   final val bangEqual = "!="
+case class BangToken(override val position: SourcePosition) extends PunctuationToken(BangToken.bang, position)
+object BangToken:
+  final val bang = "!"
+case class EqualToken(override val position: SourcePosition) extends PunctuationToken(EqualToken.equal, position)
+object EqualToken:
+  final val equal = "="
 case class EqualEqualToken(override val position: SourcePosition) extends PunctuationToken(EqualEqualToken.equalEqual, position)
 object EqualEqualToken:
   final val equalEqual = "=="
