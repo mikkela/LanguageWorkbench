@@ -14,18 +14,26 @@ class ExpressionParserTests extends FunSuite {
     val ast = ExpressionParser.parse(scanner.scan(source))
     assertEquals(ast, Right(
       BinaryNode(
-        PlusToken(createSourcePosition(2, 15)), 
-        BinaryNode(
-          MinusToken(createSourcePosition(2, 4)), 
-          LiteralNode(5.0),
+        PlusToken(createSourcePosition(2, 15)),
+        GroupNode(
           BinaryNode(
-            MinusToken(createSourcePosition(2, 9)),
-            LiteralNode(3.0),
-            LiteralNode(1.0))),
+            MinusToken(createSourcePosition(2, 4)),
+            LiteralNode(5.0),
+            GroupNode(
+              BinaryNode(
+                MinusToken(createSourcePosition(2, 9)),
+                LiteralNode(3.0),
+                LiteralNode(1.0)
+              )
+            )
+          )
+        ),
         UnaryNode(
           MinusToken(createSourcePosition(2, 17)),
           LiteralNode(1.0)
-        ))))
+        )
+      )
+    ))
     println(ast)
   }
   

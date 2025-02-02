@@ -12,3 +12,5 @@ case class BinaryNode(operator: MinusToken | PlusToken | StarToken | SlashToken 
                       rightExpression: ExpressionNode) extends ExpressionNode
 
 case class LiteralNode(value: Double | String | Boolean | Null) extends ExpressionNode
+
+case class GroupNode(expression: ExpressionNode) extends ExpressionNode

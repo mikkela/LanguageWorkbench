@@ -13,7 +13,7 @@ object PrimaryParser extends Parser[ExpressionNode]:
       case Some(n: NilToken) => Right(LiteralNode(null))
       case Some(n: LeftParenthesisToken) => ExpressionParser.parse(bufferedTokens).flatMap {
         expression => matchToken[RightParenthesisToken](bufferedTokens) match
-            case Some(t) => Right(expression)
+            case Some(t) => Right(GroupNode(expression))
             case None => parseError(bufferedTokens.head)
       }
       case _ => parseError(bufferedTokens.head)
