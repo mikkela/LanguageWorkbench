@@ -3,7 +3,7 @@ package org.mikadocs.language.lox
 import munit.FunSuite
 
 import scala.io.Source
-import org.mikadocs.language.workbench.{SourceReader}
+import org.mikadocs.language.workbench.{SourceReader, Success}
 
 class ExpressionParserTests extends FunSuite {
   test("should parse an expression correctly") {
@@ -12,7 +12,7 @@ class ExpressionParserTests extends FunSuite {
       
     val scanner = LoxScanner()
     val ast = ExpressionParser.parse(scanner.scan(source))
-    assertEquals(ast, Right(
+    assertEquals(ast, Success(
       BinaryNode(
         PlusToken(createSourcePosition(2, 15)),
         GroupNode(

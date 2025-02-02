@@ -9,11 +9,11 @@ case class NumberToken(lexeme: String, position: SourcePosition) extends Token
 
 
 class TestParser extends Parser[Node]:
-  override def parse(tokens: Iterator[Token]): Either[String, Node] =
-    Left("Not implemented")
+  override def parse(tokens: Iterator[Token]): ParserResult[Node] =
+    Failure("Not implemented")
 
   // Exposing parseError for testing
-  def testParseError(t: Token): Either[String, Node] =
+  def testParseError(t: Token): ParserResult[Node] =
     parseError(t)
   // Exposing matchToken for testing
   def testMatchToken[T <: Token](tokens: scala.collection.BufferedIterator[Token])(using ct: ClassTag[T]): Option[T] =
@@ -71,13 +71,13 @@ class ParserTests extends FunSuite {
     val parser = new TestParser
     val error = parser.testParseError(IdentifierToken("x", createSourcePosition(1, 1)))
 
-    assertEquals(error, Left("Parse error: x at position: 1.1"))
+    assertEquals(error, Failure("Parse error: x at position: 1.1"))
   }
 
   test("parseError should return end-of-file error message") {
     val parser = new TestParser
     val error = parser.testParseError(EndOfFileToken)
 
-    assertEquals(error, Left("Parse Error: Unexpected end of file"))
+    assertEquals(error, Failure("Parse Error: Unexpected end of file"))
   }
 }

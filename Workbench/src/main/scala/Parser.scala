@@ -4,14 +4,31 @@ import org.mikadocs.language.workbench
 import scala.annotation.targetName
 import scala.reflect.ClassTag
 
-trait Parser[T <: Node]:
-  def parse(tokens: Iterator[Token]): Either[String, T]
+sealed trait ParserResult[+T <: Node]:
+  def flatMap[U <: Node](f: T => ParserResult[U]): ParserResult[U] = this match
+    case Success(node) => f(node)
+    case Failure(error) => Failure(error)
+    case UnfinishedParsing => UnfinishedParsing
 
-  protected def parseError(token: Token): Either[String, T] =
+  def map[U <: Node](f: T => U): ParserResult[U] = this match
+    case Success(node) => Success(f(node))
+    case Failure(error) => Failure(error)
+    case UnfinishedParsing => UnfinishedParsing
+
+object ParserResult:
+  def pure[T <: Node](value: T): ParserResult[T] = Success(value)
+case class Success[T <: Node](node: T) extends ParserResult[T]
+case class Failure(errorMessage: String) extends ParserResult[Nothing]
+case object UnfinishedParsing extends ParserResult[Nothing]
+
+trait Parser[T <: Node]:
+  def parse(tokens: Iterator[Token]): ParserResult[T]
+
+  protected def parseError(token: Token): ParserResult[T] =
     if token != EndOfFileToken then
-      Left(s"${this.getClass.getSimpleName}: Parse error: ${token.lexeme} at position: ${token.position}")
+      Failure(s"${this.getClass.getSimpleName}: Parse error: ${token.lexeme} at position: ${token.position}")
     else
-      Left(s"${this.getClass.getSimpleName}: Parse Error: Unexpected end of file")
+      Failure(s"${this.getClass.getSimpleName}: Parse Error: Unexpected end of file")
 
   @targetName("matchToken")
   protected def matchToken[TokenType <: Token](tokens: scala.collection.BufferedIterator[Token])
