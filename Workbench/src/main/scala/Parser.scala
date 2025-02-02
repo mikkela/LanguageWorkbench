@@ -112,24 +112,3 @@ trait Parser[T <: Node]:
   Option[TokenTypeAlternative1 | TokenTypeAlternative2 | TokenTypeAlternative3 | TokenTypeAlternative4 | TokenTypeAlternative5 | TokenTypeAlternative6] =
     matchToken[TokenTypeAlternative1, TokenTypeAlternative2, TokenTypeAlternative3, TokenTypeAlternative4, TokenTypeAlternative5](tokens).
       orElse(matchToken[TokenTypeAlternative6](tokens))
-
-trait TokenMatcher:
-  def tokenMatched(token: Token): Boolean
-
-class TokenTypeMatcher[T <: Token] extends TokenMatcher:
-  override def tokenMatched(token: Token): Boolean = token.isInstanceOf[T]
-
-enum TokensMatch:
-  case NoMatch, PartialMatch, CompleteMatch
-
-class TokensMatcher(val matchers: Seq[TokenMatcher]):
-
-  def matches(tokens: Seq[Token]): TokensMatch =
-    if tokens.length > matchers.length then TokensMatch.NoMatch
-    else
-      val zipped = tokens.zip(matchers)
-      zipped.forall((t, m) => m.tokenMatched(t)) match
-        case true if zipped.length == matchers.length => TokensMatch.CompleteMatch
-        case true => TokensMatch.PartialMatch
-        case _ => TokensMatch.NoMatch
-

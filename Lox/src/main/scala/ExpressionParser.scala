@@ -1,6 +1,6 @@
 package org.mikadocs.language.lox
 
-import org.mikadocs.language.workbench.{Parser, ParserResult, Success, Token, TokenTypeMatcher, TokensMatcher}
+import org.mikadocs.language.workbench.{Parser, ParserResult, Success, Token}
 
 object PrimaryParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
