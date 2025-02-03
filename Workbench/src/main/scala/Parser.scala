@@ -4,22 +4,7 @@ import org.mikadocs.language.workbench
 import scala.annotation.targetName
 import scala.reflect.ClassTag
 
-sealed trait ParserResult[+T <: Node]:
-  def flatMap[U <: Node](f: T => ParserResult[U]): ParserResult[U] = this match
-    case Success(node) => f(node)
-    case Failure(error) => Failure(error)
-    case UnfinishedParsing => UnfinishedParsing
-
-  def map[U <: Node](f: T => U): ParserResult[U] = this match
-    case Success(node) => Success(f(node))
-    case Failure(error) => Failure(error)
-    case UnfinishedParsing => UnfinishedParsing
-
-object ParserResult:
-  def pure[T <: Node](value: T): ParserResult[T] = Success(value)
-case class Success[T <: Node](node: T) extends ParserResult[T]
-case class Failure(errorMessage: String) extends ParserResult[Nothing]
-case object UnfinishedParsing extends ParserResult[Nothing]
+type ParserResult[T <: Node] = Result[T]
 
 trait Parser[T <: Node]:
   def parse(tokens: Iterator[Token]): ParserResult[T]

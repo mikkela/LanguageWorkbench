@@ -40,4 +40,5 @@ lazy val kamin = (project in file("kamin"))
   )
   .dependsOn(workbench)
 
+libraryDependencies += "org.jline" % "jline" % "3.27.1"
 libraryDependencies += "org.scalameta" %% "munit" % "1.0.3" % Test
