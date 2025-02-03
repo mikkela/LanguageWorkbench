@@ -15,7 +15,7 @@ lazy val root = (project in file("."))
   .aggregate(
     workbench, lox
   )
-  .dependsOn(workbench)
+  .dependsOn(workbench, lox)
 
 lazy val workbench = (project in file("workbench"))
   .settings(

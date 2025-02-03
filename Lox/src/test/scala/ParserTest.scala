@@ -11,7 +11,7 @@ class ExpressionParserTests extends FunSuite {
       LoxSourceReader(SourceReader(Source.fromFile(getPath("expression.lox")).mkString))
       
     val scanner = LoxScanner()
-    val ast = ExpressionParser.parse(scanner.scan(source))
+    val ast = expressionParser.parse(scanner.scan(source))
     assertEquals(ast, Success(
       BinaryNode(
         PlusToken(createSourcePosition(2, 15)),

@@ -1,10 +1,12 @@
 package org.mikadocs.language
 
+import lox.loxInterpreter
+import workbench.{Interpreter, ParseAndPrintResult}
+
 import org.jline.reader.{LineReader, LineReaderBuilder}
 import org.jline.terminal.TerminalBuilder
-import org.mikadocs.language.workbench.{EvaluationResult, Failure, Interpreter, ParseAndPrintResult, Result, Success, Unfinished, Value}
 
-val languageMap: Map[String, Interpreter] = Map("lox" -> null)
+val languageMap: Map[String, Interpreter] = Map("lox" -> loxInterpreter)
 
 @main
 def Workbench(): Unit =

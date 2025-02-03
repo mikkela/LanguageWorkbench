@@ -4,7 +4,7 @@ import org.mikadocs.language.workbench.Node
 
 trait ExpressionNode extends Node
 
-case class UnaryNode(operator: MinusToken | BangToken, rightExpression: ExpressionNode) extends ExpressionNode
+case class UnaryNode(operator: MinusToken | BangToken, expression: ExpressionNode) extends ExpressionNode
 
 case class BinaryNode(operator: MinusToken | PlusToken | StarToken | SlashToken | EqualEqualToken | BangEqualToken |
                                 GreaterToken | LessToken | GreaterEqualToken | LessEqualToken,
