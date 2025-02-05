@@ -13,9 +13,9 @@ lazy val root = (project in file("."))
     libraryDependencies ++= scalaTestDeps,
   )
   .aggregate(
-    workbench, lox
+    workbench, kamin, lox
   )
-  .dependsOn(workbench, lox)
+  .dependsOn(workbench, kamin, lox)
 
 lazy val workbench = (project in file("workbench"))
   .settings(

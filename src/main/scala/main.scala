@@ -1,12 +1,14 @@
 package org.mikadocs.language
 
-import lox.loxInterpreter
 import workbench.{Interpreter, ParseAndPrintResult}
 
 import org.jline.reader.{LineReader, LineReaderBuilder}
 import org.jline.terminal.TerminalBuilder
 
-val languageMap: Map[String, Interpreter] = Map("lox" -> loxInterpreter)
+val languageMap: Map[String, Interpreter] = Map(
+  "kamin.basic" -> kamin.basic.basicInterpreter,
+  "lox" -> lox.loxInterpreter
+)
 
 @main
 def Workbench(): Unit =
@@ -22,46 +24,44 @@ def Workbench(): Unit =
   var program = StringBuilder()
   while continue do
     val input = (if program.isEmpty then lineReader.readLine("->") else lineReader.readLine(">"))
-
-      .split("\\s+")
-    if !input.isEmpty then
-      input.head match
-        case ":exit" =>
-          program.clear()
-          continue = false
-        case ":language" =>
-          program.clear()
-          if input.length == 2 then
-            if languageMap.contains(input(1)) then
-              interpreter = languageMap(input(1))
-        case ":mode" =>
-          program.clear()
-          if input.length== 2 then
-            input(1) match
-              case "parse" => parseOrEvaluate = Left(())
-              case "evaluate" => parseOrEvaluate = Right(())
-        case s =>
-          program.append(s)
-          if parseOrEvaluate.isLeft then
-            interpreter.parseAndPrint(program.toString()).handle(
-              v => {
-                program.clear()
-                println(v)
-              },
-              e => {
-                program.clear()
-                println("Error: " + e)
-              }
-            )
-          else
-            interpreter.parseAndPrint(program.toString()).handle(
-              v => {
-                program.clear()
-                println(v)
-              },
-              e => {
-                program.clear()
-                println("Error: " + e)
-              }
-            )
+    if input.startsWith(":") then
+      val parts = input.split("\\s+")
+      if !parts.isEmpty then
+        program.clear()
+        parts.head match
+          case ":exit" =>
+            continue = false
+          case ":language" =>
+            if input.length == 2 then
+              if languageMap.contains(parts(1)) then
+                interpreter = languageMap(parts(1))
+          case ":mode" =>
+            if parts.length== 2 then
+              parts(1) match
+                case "parse" => parseOrEvaluate = Left(())
+                case "evaluate" => parseOrEvaluate = Right(())
+    else
+      program.append(input)
+      if parseOrEvaluate.isLeft then
+        interpreter.parseAndPrint(program.toString()).handle(
+          v => {
+            program.clear()
+            println(v)
+          },
+          e => {
+            program.clear()
+            println("Error: " + e)
+          }
+        )
+      else
+        interpreter.parseAndPrint(program.toString()).handle(
+          v => {
+            program.clear()
+            println(v)
+          },
+          e => {
+            program.clear()
+            println("Error: " + e)
+          }
+        )
 

@@ -1,10 +1,10 @@
 package org.mikadocs.language.lox
 
-import org.mikadocs.language.workbench.{Parser, ParserResult, Success, Token}
+import org.mikadocs.language.workbench.{Parser, ParserResult, Success, Token, LookaheadIterator}
 
 object primaryParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
-    val bufferedTokens = tokens.buffered
+    val bufferedTokens = LookaheadIterator[Token](tokens)
     matchToken[NumberToken, StringToken, TrueToken, FalseToken, NilToken, LeftParenthesisToken](bufferedTokens) match
       case Some(n: NumberToken) => Success(LiteralNode(n.lexeme.toDouble))
       case Some(s: StringToken) => Success(LiteralNode(s.lexeme))
@@ -14,13 +14,13 @@ object primaryParser extends Parser[ExpressionNode]:
       case Some(n: LeftParenthesisToken) => expressionParser.parse(bufferedTokens).flatMap {
         expression => matchToken[RightParenthesisToken](bufferedTokens) match
             case Some(t) => Success(GroupNode(expression))
-            case None => parseError(bufferedTokens.head)
+            case None => handleUnmatchedToken(bufferedTokens.headOption)
       }
-      case _ => parseError(bufferedTokens.head)
+      case _ => handleUnmatchedToken(bufferedTokens.headOption)
 
 object unaryParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
-    val bufferedTokens = tokens.buffered
+    val bufferedTokens = LookaheadIterator[Token](tokens)
     matchToken[BangToken, MinusToken](bufferedTokens) match
       case Some(t) =>
         primaryParser.parse(tokens).flatMap {
@@ -30,7 +30,7 @@ object unaryParser extends Parser[ExpressionNode]:
 
 object factorParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
-    val bufferedTokens = tokens.buffered
+    val bufferedTokens = LookaheadIterator[Token](tokens)
     unaryParser.parse(bufferedTokens).flatMap {
       leftExpression =>
         matchToken[SlashToken, StarToken](bufferedTokens) match
@@ -42,7 +42,7 @@ object factorParser extends Parser[ExpressionNode]:
 
 object termParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
-    val bufferedTokens = tokens.buffered
+    val bufferedTokens = LookaheadIterator[Token](tokens)
     factorParser.parse(bufferedTokens).flatMap {
       leftExpression =>
         matchToken[PlusToken, MinusToken](bufferedTokens) match
@@ -54,7 +54,7 @@ object termParser extends Parser[ExpressionNode]:
 
 object comparisonParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
-    val bufferedTokens = tokens.buffered
+    val bufferedTokens = LookaheadIterator[Token](tokens)
     termParser.parse(bufferedTokens).flatMap {
       leftExpression =>
         matchToken[LessToken, LessEqualToken, GreaterToken, GreaterEqualToken](bufferedTokens) match
@@ -66,7 +66,7 @@ object comparisonParser extends Parser[ExpressionNode]:
 
 object equalityParser extends Parser[ExpressionNode]:
   override def parse(tokens: Iterator[Token]): ParserResult[ExpressionNode] =
-    val bufferedTokens = tokens.buffered
+    val bufferedTokens = LookaheadIterator[Token](tokens)
     comparisonParser.parse(bufferedTokens).flatMap {
       leftExpression =>
         matchToken[EqualEqualToken, BangEqualToken](bufferedTokens) match

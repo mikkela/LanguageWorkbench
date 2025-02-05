@@ -16,3 +16,5 @@ abstract class BooleanValue protected(val value: Boolean) extends Value:
 
   override def toString: String = asString(value)
 
+implicit class IntegerValueExtension(val i: Int) extends AnyVal:
+  def toIntegerValue: IntegerValue = IntegerValue(i)

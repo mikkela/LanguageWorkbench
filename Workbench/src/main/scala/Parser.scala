@@ -9,23 +9,27 @@ type ParserResult[T <: Node] = Result[T]
 trait Parser[T <: Node]:
   def parse(tokens: Iterator[Token]): ParserResult[T]
 
-  protected def parseError(token: Token): ParserResult[T] =
-    if token != EndOfFileToken then
-      Failure(s"${this.getClass.getSimpleName}: Parse error: ${token.lexeme} at position: ${token.position}")
+  protected def handleUnmatchedToken(token: Option[Token], acceptUnfinished: Boolean = false): ParserResult[T] =
+    if !token.isEmpty && token.get != EndOfFileToken then
+      Failure(s"Parse error: ${token.get.lexeme} at position: ${token.get.position}")
     else
-      Failure(s"${this.getClass.getSimpleName}: Parse Error: Unexpected end of file")
+      if acceptUnfinished then
+        Unfinished
+      else
+        Failure(s"Parse Error: Unexpected end of file")
 
   @targetName("matchToken")
-  protected def matchToken[TokenType <: Token](tokens: scala.collection.BufferedIterator[Token])
+  protected def matchToken[TokenType <: Token](tokens: LookaheadIterator[Token])
                                               (using ct: ClassTag[TokenType]): Option[TokenType] =
     if !tokens.hasNext then None
-    else if ct.runtimeClass.isInstance(tokens.head) then
-      Some(tokens.next().asInstanceOf[TokenType])
     else
-      None
+      if ct.runtimeClass.isInstance(tokens.lookahead(1)(0)) then
+        Some(tokens.next().asInstanceOf[TokenType])
+      else
+        None
 
   @targetName("match2Token")
-  protected def matchToken[TokenTypeAlternative1 <: Token, TokenTypeAlternative2 <: Token](tokens: scala.collection.BufferedIterator[Token])
+  protected def matchToken[TokenTypeAlternative1 <: Token, TokenTypeAlternative2 <: Token](tokens: LookaheadIterator[Token])
                                                                                           (using ct1: ClassTag[TokenTypeAlternative1])
                                                                                           (using ct2: ClassTag[TokenTypeAlternative2]): Option[TokenTypeAlternative1 | TokenTypeAlternative2] =
     matchToken[TokenTypeAlternative1](tokens).
@@ -37,7 +41,7 @@ trait Parser[T <: Node]:
     TokenTypeAlternative2 <: Token,
     TokenTypeAlternative3 <: Token
   ]
-  (tokens: scala.collection.BufferedIterator[Token])
+  (tokens: LookaheadIterator[Token])
   (using ct1: ClassTag[TokenTypeAlternative1])
   (using ct2: ClassTag[TokenTypeAlternative2])
   (using ct3: ClassTag[TokenTypeAlternative3]):
@@ -52,7 +56,7 @@ trait Parser[T <: Node]:
     TokenTypeAlternative3 <: Token,
     TokenTypeAlternative4 <: Token
   ]
-  (tokens: scala.collection.BufferedIterator[Token])
+  (tokens: LookaheadIterator[Token])
   (using ct1: ClassTag[TokenTypeAlternative1])
   (using ct2: ClassTag[TokenTypeAlternative2])
   (using ct3: ClassTag[TokenTypeAlternative3])
@@ -69,7 +73,7 @@ trait Parser[T <: Node]:
     TokenTypeAlternative4 <: Token,
     TokenTypeAlternative5 <: Token
   ]
-  (tokens: scala.collection.BufferedIterator[Token])
+  (tokens: LookaheadIterator[Token])
   (using ct1: ClassTag[TokenTypeAlternative1])
   (using ct2: ClassTag[TokenTypeAlternative2])
   (using ct3: ClassTag[TokenTypeAlternative3])
@@ -87,7 +91,7 @@ trait Parser[T <: Node]:
     TokenTypeAlternative5 <: Token,
     TokenTypeAlternative6 <: Token
   ]
-  (tokens: scala.collection.BufferedIterator[Token])
+  (tokens: LookaheadIterator[Token])
   (using ct1: ClassTag[TokenTypeAlternative1])
   (using c2: ClassTag[TokenTypeAlternative2])
   (using ct3: ClassTag[TokenTypeAlternative3])

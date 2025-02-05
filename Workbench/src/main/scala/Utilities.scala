@@ -1,18 +1,29 @@
 package org.mikadocs.language.workbench
 
-// Generic Registry
-class Registry[K, V]:
-  private val registry: scala.collection.mutable.Map[K, V] = scala.collection.mutable.Map()
+import scala.collection.mutable
 
-  def register(key: K, value: V): Unit = 
-    registry += (key -> value)
+implicit class LookaheadIterator[A](val iter: Iterator[A]) extends Iterator[A]:
+  private val buffer = mutable.Queue.empty[A]
 
-  def get(key: K): Option[V] = 
-    registry.get(key)
+  private def ensureBuffered(n: Int): Unit =
+    while (buffer.size < n && iter.hasNext) do
+      buffer.enqueue(iter.next())
 
-  def size: Int = registry.size
+  def lookahead(n: Int): Seq[A] =
+    ensureBuffered(n)
+    buffer.iterator.take(n).toSeq
 
-sealed trait TriState
-case object True extends TriState
-case object False extends TriState
-case object NotApplicable extends TriState
+  def headOption: Option[A] =
+    ensureBuffered(1)
+    buffer.headOption
+    
+  override def hasNext: Boolean = buffer.nonEmpty || iter.hasNext
+
+  override def next(): A =
+    ensureBuffered(1)
+    buffer.dequeue()
+
+  def asIterator: Iterator[A] = buffer.iterator ++ iter
+
+def prepend[T](head: T, tail: Iterator[T]): Iterator[T] =
+  Iterator.single(head) ++ tail

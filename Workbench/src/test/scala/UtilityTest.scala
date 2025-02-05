@@ -1,61 +1,81 @@
 package org.mikadocs.language.workbench
 
-trait Value
-class StringValue extends Value
-class IntValue extends Value
+import munit.FunSuite
 
-// Unit tests
-class RegistryTest extends munit.FunSuite {
+class LookaheadIteratorTest extends FunSuite:
+  test("lookahead without consuming"):
+    val it = Iterator(1, 2, 3, 4, 5)
+    val laIt = new LookaheadIterator(it)
 
-  test("Registry should allow registering and retrieving a value") {
-    val registry = new Registry[Class[_ <: Value], Value]()
-    val stringValue = new StringValue
+    assertEquals(laIt.lookahead(1), Seq(1))
+    assertEquals(laIt.lookahead(2), Seq(1, 2))
+    assertEquals(laIt.lookahead(3), Seq(1, 2, 3))
+    assertEquals(laIt.lookahead(10), Seq(1, 2, 3, 4, 5)) // Out of range
 
-    registry.register(classOf[StringValue], stringValue)
+  test("lookahead and consume"):
+    val it = Iterator(1, 2, 3, 4, 5)
+    val laIt = new LookaheadIterator(it)
 
-    assertEquals(registry.get(classOf[StringValue]), Some(stringValue))
-  }
+    assertEquals(laIt.lookahead(2), Seq(1, 2))
+    assertEquals(laIt.next(), 1)
+    assertEquals(laIt.lookahead(2), Seq(2, 3))
+    assertEquals(laIt.next(), 2)
+    assertEquals(laIt.next(), 3)
+    assertEquals(laIt.lookahead(2), Seq(4, 5))
+    assertEquals(laIt.next(), 4)
+    assertEquals(laIt.next(), 5)
+    assertEquals(laIt.lookahead(1), Seq())
+    assert(!laIt.hasNext)
 
-  test("Registry should return None for an unregistered key") {
-    val registry = new Registry[Class[_ <: Value], Value]()
+  test("hasNext behavior"):
+    val it = Iterator(1, 2, 3)
+    val laIt = new LookaheadIterator(it)
 
-    assertEquals(registry.get(classOf[StringValue]), None)
-  }
+    assert(laIt.hasNext)
+    assertEquals(laIt.next(), 1)
+    assert(laIt.hasNext)
+    assertEquals(laIt.next(), 2)
+    assert(laIt.hasNext)
+    assertEquals(laIt.next(), 3)
+    assert(!laIt.hasNext)
 
-  test("Registry should allow multiple registrations") {
-    val registry = new Registry[Class[_ <: Value], Value]()
-    val stringValue = new StringValue
-    val intValue = new IntValue
+  test("Convert LookaheadIterator back to Iterator"):
+    val it = Iterator(1, 2, 3, 4, 5)
+    val laIt = new LookaheadIterator(it)
+    laIt.lookahead(2)
+    val normalIt = laIt.asIterator
 
-    registry.register(classOf[StringValue], stringValue)
-    registry.register(classOf[IntValue], intValue)
+    assertEquals(normalIt.next(), 1)
+    assertEquals(normalIt.next(), 2)
+    assertEquals(normalIt.next(), 3)
+    assertEquals(normalIt.next(), 4)
+    assertEquals(normalIt.next(), 5)
+    assert(!normalIt.hasNext)
 
-    assertEquals(registry.get(classOf[StringValue]), Some(stringValue))
-    assertEquals(registry.get(classOf[IntValue]), Some(intValue))
-  }
+class PrependTest extends FunSuite:
+  test("prepend to non-empty iterator"):
+    val it = Iterator(2, 3, 4)
+    val newIt = prepend(1, it)
 
-  test("Registry should overwrite a value for the same key") {
-    val registry = new Registry[Class[_ <: Value], Value]()
-    val firstValue = new StringValue
-    val secondValue = new StringValue
+    assertEquals(newIt.next(), 1)
+    assertEquals(newIt.next(), 2)
+    assertEquals(newIt.next(), 3)
+    assertEquals(newIt.next(), 4)
+    assert(!newIt.hasNext)
 
-    registry.register(classOf[StringValue], firstValue)
-    registry.register(classOf[StringValue], secondValue)
+  test("prepend to empty iterator"):
+    val it = Iterator.empty[Int]
+    val newIt = prepend(1, it)
 
-    assertEquals(registry.get(classOf[StringValue]), Some(secondValue))
-  }
+    assertEquals(newIt.next(), 1)
+    assert(!newIt.hasNext)
 
-  test("Registry should report the correct size") {
-    val registry = new Registry[Class[_ <: Value], Value]()
-    assertEquals(registry.size, 0)
+  test("prepend does not modify original iterator"):
+    val it = Iterator(2, 3, 4)
+    val newIt = prepend(1, it)
 
-    registry.register(classOf[StringValue], new StringValue)
-    assertEquals(registry.size, 1)
-
-    registry.register(classOf[IntValue], new IntValue)
-    assertEquals(registry.size, 2)
-
-    registry.register(classOf[StringValue], new StringValue) // Overwrite
-    assertEquals(registry.size, 2)
-  }
-}
+    assertEquals(newIt.next(), 1)
+    assertEquals(it.next(), 2) // Ensuring `it` remains usable
+    assertEquals(it.next(), 3)
+    assertEquals(it.next(), 4)
+    assert(!it.hasNext)
