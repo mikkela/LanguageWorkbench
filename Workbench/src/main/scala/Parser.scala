@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 type ParserResult[T <: Node] = Result[T]
 
 trait Parser[T <: Node]:
-  def parse(tokens: Iterator[Token]): ParserResult[T]
+  def parse(tokens: LookaheadIterator[Token]): ParserResult[T]
 
   protected def handleUnmatchedToken(token: Option[Token], acceptUnfinished: Boolean = false): ParserResult[T] =
     if !token.isEmpty && token.get != EndOfFileToken then

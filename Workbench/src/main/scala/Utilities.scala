@@ -23,7 +23,5 @@ implicit class LookaheadIterator[A](val iter: Iterator[A]) extends Iterator[A]:
     ensureBuffered(1)
     buffer.dequeue()
 
-  def asIterator: Iterator[A] = buffer.iterator ++ iter
-
 def prepend[T](head: T, tail: Iterator[T]): Iterator[T] =
   Iterator.single(head) ++ tail

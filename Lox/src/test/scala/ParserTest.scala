@@ -3,7 +3,7 @@ package org.mikadocs.language.lox
 import munit.FunSuite
 
 import scala.io.Source
-import org.mikadocs.language.workbench.{SourceReader, Success}
+import org.mikadocs.language.workbench.{SourceReader, Success, LookaheadIterator}
 
 class ExpressionParserTests extends FunSuite {
   test("should parse an expression correctly") {

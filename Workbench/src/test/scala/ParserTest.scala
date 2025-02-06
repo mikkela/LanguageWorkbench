@@ -10,7 +10,7 @@ case class NumberToken(lexeme: String, position: SourcePosition) extends Token
 
 
 class TestParser extends Parser[Node]:
-  override def parse(tokens: Iterator[Token]): ParserResult[Node] =
+  override def parse(tokens: LookaheadIterator[Token]): ParserResult[Node] =
     Failure("Not implemented")
 
   // Exposing parseError for testing

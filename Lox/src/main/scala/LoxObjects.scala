@@ -1,6 +1,6 @@
 package org.mikadocs.language.lox
 
-import org.mikadocs.language.workbench.{EvaluationResult, 
+import org.mikadocs.language.workbench.{EvaluationResult, LookaheadIterator,
   Interpreter, Node, NodeVisitor, ParseAndPrintResult, SourceReader, visit}
 
 object loxPrinter extends NodeVisitor[String]:

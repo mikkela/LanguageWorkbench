@@ -1,7 +1,7 @@
 package org.mikadocs.language.kamin
 package basic
 
-import org.mikadocs.language.workbench.{Interpreter, Node, NodeVisitor, ParseAndPrintResult, EvaluationResult, SourceReader, visit}
+import org.mikadocs.language.workbench.{EvaluationResult, Interpreter, LookaheadIterator, Node, NodeVisitor, ParseAndPrintResult, SourceReader, Token, visit}
 
 object basicPrinter extends NodeVisitor[String]:
   override def visit(node: Node): String =
@@ -32,7 +32,7 @@ object basicPrinter extends NodeVisitor[String]:
         result.append(visit(value))
         result.append(")")
       case BeginExpressionNode(expressions) =>
-        result.append("(set")
+        result.append("(begin")
         expressions.foreach(
           e =>
             result.append(" ")

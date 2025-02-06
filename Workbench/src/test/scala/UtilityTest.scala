@@ -39,19 +39,6 @@ class LookaheadIteratorTest extends FunSuite:
     assertEquals(laIt.next(), 3)
     assert(!laIt.hasNext)
 
-  test("Convert LookaheadIterator back to Iterator"):
-    val it = Iterator(1, 2, 3, 4, 5)
-    val laIt = new LookaheadIterator(it)
-    laIt.lookahead(2)
-    val normalIt = laIt.asIterator
-
-    assertEquals(normalIt.next(), 1)
-    assertEquals(normalIt.next(), 2)
-    assertEquals(normalIt.next(), 3)
-    assertEquals(normalIt.next(), 4)
-    assertEquals(normalIt.next(), 5)
-    assert(!normalIt.hasNext)
-
 class PrependTest extends FunSuite:
   test("prepend to non-empty iterator"):
     val it = Iterator(2, 3, 4)
