@@ -10,7 +10,7 @@ object basicPrinter extends NodeVisitor[String]:
       case ValueExpressionNode(value) =>
         result.append(value.value)
       case VariableExpressionNode(variable) =>
-        result.append(variable.lexeme)
+        result.append(variable)
       case IfExpressionNode(test, consequence, alternative) =>
         result.append("(if ")
         result.append(visit(test))
@@ -27,7 +27,7 @@ object basicPrinter extends NodeVisitor[String]:
         result.append(")")
       case SetExpressionNode(variable, value) =>
         result.append("(set ")
-        result.append(variable.lexeme)
+        result.append(variable)
         result.append(" ")
         result.append(visit(value))
         result.append(")")
@@ -41,7 +41,7 @@ object basicPrinter extends NodeVisitor[String]:
         result.append(")")
       case OperationExpressionNode(operator, parameters) =>
         result.append("( ")
-        result.append(operator.lexeme)
+        result.append(operator)
         parameters.foreach(
           e =>
             result.append(" ")
@@ -50,13 +50,13 @@ object basicPrinter extends NodeVisitor[String]:
         result.append(")")
       case FunctionDefinitionNode(function, arguments, expression) =>
         result.append("(define ")
-        result.append(function.lexeme)
+        result.append(function)
         result.append(" (")
         var writtenFirst = false
         arguments.foreach(
           a =>
             if writtenFirst then result.append(" ")
-            result.append(a.lexeme)
+            result.append(a)
             writtenFirst = true
         )
         result.append(") ")
@@ -66,7 +66,13 @@ object basicPrinter extends NodeVisitor[String]:
 
 object basicInterpreter extends Interpreter:
 
-  override def interpret(progam: String): EvaluationResult = ???
+  override def interpret(program: String): EvaluationResult =
+    basicParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program)))).map(
+      ast => BasicEvaluator(BasicEvaluator.globalEnvironment).visit(ast) match {
+        case Left(error) => error
+        case Right(result) => result.toString
+      }
+    )
 
   override def parseAndPrint(program: String): ParseAndPrintResult =
     (basicParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program))))).map(

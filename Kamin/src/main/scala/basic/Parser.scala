@@ -1,10 +1,7 @@
 package org.mikadocs.language.kamin
 package basic
 
-import org.mikadocs.language.kamin.ExpressionParser
-import org.mikadocs.language.kamin.basic.beginExpressionParser.parse
-import org.mikadocs.language.kamin.basic.ifExpressionParser.handleUnmatchedToken
-import org.mikadocs.language.workbench.{EndOfFileToken, Failure, IntegerValueExtension, LookaheadIterator, Node, Parser, ParserResult, Success, Token, Unfinished, prepend}
+import org.mikadocs.language.workbench.{IntegerValueExtension, LookaheadIterator, Parser, ParserResult, Success, Token, prepend}
 
 object basicParser extends Parser[ExpressionNode | FunctionDefinitionNode]:
   override def parse(tokens: LookaheadIterator[Token]): ParserResult[ExpressionNode | FunctionDefinitionNode] =
@@ -17,14 +14,6 @@ object basicParser extends Parser[ExpressionNode | FunctionDefinitionNode]:
 
 object functionDefinitionParser extends Parser[FunctionDefinitionNode], ArgumentListParser[FunctionDefinitionNode]:
   override def parse(tokens: LookaheadIterator[Token]): ParserResult[FunctionDefinitionNode] =
-
-    /*matchToken[LeftParenthesisToken](bufferedTokens) match
-      case Some(_) =>
-        matchToken[DefineToken](bufferedTokens) match
-          case Some(_) =>
-            ???
-          case _ => handleUnmatchedToken(bufferedTokens.lookahead(1).headOption)
-      case _ => handleUnmatchedToken(bufferedTokens.lookahead(1).headOption)*/
     (matchToken[LeftParenthesisToken](tokens), matchToken[DefineToken](tokens)) match
       case (Some(_), Some(_)) =>
         matchToken[NameToken](tokens) match
@@ -33,12 +22,12 @@ object functionDefinitionParser extends Parser[FunctionDefinitionNode], Argument
               case Some(_) =>
                 parseList(
                   tokens,
-                  Seq.empty[NameToken],
+                  Seq.empty[String],
                   arguments =>
                     expressionParser.parse(tokens).flatMap{
-                      expression => Success(FunctionDefinitionNode(function, arguments, expression))
+                      expression => Success(FunctionDefinitionNode(function.lexeme, arguments, expression))
                     }
-                    
+
                 )
 
               case None => handleUnmatchedToken(tokens.headOption, acceptUnfinished = true)
@@ -49,7 +38,7 @@ object expressionParser extends ExpressionParser:
   override def parse(tokens: LookaheadIterator[Token]): ParserResult[ExpressionNode] =
     matchToken[IntegerToken, NameToken, LeftParenthesisToken](tokens) match
       case Some(t: IntegerToken) => Success(ValueExpressionNode(t.lexeme.toInt.toIntegerValue))
-      case Some(t: NameToken) => Success(VariableExpressionNode(t))
+      case Some(t: NameToken) => Success(VariableExpressionNode(t.lexeme))
       case Some(_: LeftParenthesisToken) =>
         matchToken[IfToken, WhileToken, SetToken, BeginToken, OperatorToken, NameToken](tokens) match
           case Some(_: IfToken) => ifExpressionParser.parse(tokens)
@@ -98,7 +87,7 @@ object setExpressionParser extends Parser[SetExpressionNode]:
         expressionParser.parse(tokens).flatMap {
           value =>
             matchToken[RightParenthesisToken](tokens) match
-              case Some(_) => Success(SetExpressionNode(variable, value))
+              case Some(_) => Success(SetExpressionNode(variable.lexeme, value))
               case None => handleUnmatchedToken(tokens.headOption)
         }
       case _ => handleUnmatchedToken(tokens.headOption, acceptUnfinished = true)
@@ -112,8 +101,8 @@ object operationExpressionParser extends Parser[OperationExpressionNode], Expres
   override def parse(tokens: LookaheadIterator[Token]): ParserResult[OperationExpressionNode] =
     matchToken[OperatorToken, NameToken](tokens) match
       case Some(op: OperatorToken) =>
-        parseList(tokens, Seq.empty[ExpressionNode], exprs => Success(OperationExpressionNode(op, exprs)), expressionParser)
+        parseList(tokens, Seq.empty[ExpressionNode], exprs => Success(OperationExpressionNode(op.lexeme, exprs)), expressionParser)
       case Some(op: NameToken) =>
-        parseList(tokens, Seq.empty[ExpressionNode], exprs => Success(OperationExpressionNode(op, exprs)), expressionParser)
+        parseList(tokens, Seq.empty[ExpressionNode], exprs => Success(OperationExpressionNode(op.lexeme, exprs)), expressionParser)
       case None =>
         handleUnmatchedToken(tokens.headOption)

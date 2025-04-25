@@ -1,6 +1,6 @@
 package org.mikadocs.language.workbench
 
-type EvaluationResult = Result[Value]
+type EvaluationResult = Result[String]
 type ParseAndPrintResult = Result[String]
 
 trait Interpreter:

@@ -22,10 +22,10 @@ trait ExpressionListParser[T <: ExpressionNode] extends Parser[T]:
 trait ArgumentListParser[T <: Node] extends Parser[T]:
   def parseList(
              tokens: LookaheadIterator[Token],
-             initial: Seq[NameToken],
-             buildNode: Seq[NameToken] => ParserResult[T]
+             initial: Seq[String],
+             buildNode: Seq[String] => ParserResult[T]
            ): ParserResult[T] =
     matchToken[RightParenthesisToken, NameToken](tokens) match
       case Some(_: RightParenthesisToken) => buildNode(initial)
-      case Some(n: NameToken) => parseList(tokens, initial.appended(n), buildNode)
+      case Some(n: NameToken) => parseList(tokens, initial.appended(n.lexeme), buildNode)
       case None => handleUnmatchedToken(tokens.headOption, acceptUnfinished = true)

@@ -20,13 +20,13 @@ def Workbench(): Unit =
 
   var interpreter = languageMap.head._2
   var continue = true
-  var parseOrEvaluate: Either[Unit, Unit] = Left(())
+  var parseOrEvaluate: Either[Unit, Unit] = Right(())
   var program = StringBuilder()
   while continue do
-    val input = (if program.isEmpty then lineReader.readLine("->") else lineReader.readLine(">"))
+    val input = if program.isEmpty then lineReader.readLine("->") else lineReader.readLine(">")
     if input.startsWith(":") then
       val parts = input.split("\\s+")
-      if !parts.isEmpty then
+      if parts.nonEmpty then
         program.clear()
         parts.head match
           case ":exit" =>
@@ -42,26 +42,20 @@ def Workbench(): Unit =
                 case "evaluate" => parseOrEvaluate = Right(())
     else
       program.append(input)
-      if parseOrEvaluate.isLeft then
-        interpreter.parseAndPrint(program.toString()).handle(
-          v => {
-            program.clear()
-            println(v)
-          },
-          e => {
-            program.clear()
-            println("Error: " + e)
-          }
-        )
+      val result = if parseOrEvaluate.isLeft then
+        interpreter.parseAndPrint(program.toString())
       else
-        interpreter.parseAndPrint(program.toString()).handle(
-          v => {
-            program.clear()
-            println(v)
-          },
-          e => {
-            program.clear()
-            println("Error: " + e)
-          }
-        )
+        interpreter.interpret(program.toString())
+
+      program.clear()
+      result.handle(
+        v => {
+          println()
+          println(v)
+        },
+        e => {
+          println()
+          println("Error: " + e)
+        }
+      )
 
