@@ -75,7 +75,7 @@ object basicInterpreter extends Interpreter:
     )
 
   override def parseAndPrint(program: String): ParseAndPrintResult =
-    (basicParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program))))).map(
+    basicParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program)))).map(
       ast => ast.visit(using basicPrinter)
     )
 
