@@ -7,6 +7,7 @@ import org.jline.terminal.TerminalBuilder
 
 val languageMap: Map[String, Interpreter] = Map(
   "kamin.basic" -> kamin.basic.basicInterpreter,
+  "kamin.lisp" -> kamin.lisp.lispInterpreter,
   "lox" -> lox.loxInterpreter
 )
 
@@ -28,18 +29,25 @@ def Workbench(): Unit =
       val parts = input.split("\\s+")
       if parts.nonEmpty then
         program.clear()
-        parts.head match
+        parts.head.trim match
           case ":exit" =>
             continue = false
           case ":language" =>
-            if input.length == 2 then
+            if parts.length == 2 then
               if languageMap.contains(parts(1)) then
                 interpreter = languageMap(parts(1))
+                println("Language is: " + parts(1))
+              else
+                println("Language not found: " + parts(1))
+
           case ":mode" =>
             if parts.length== 2 then
               parts(1) match
                 case "parse" => parseOrEvaluate = Left(())
                 case "evaluate" => parseOrEvaluate = Right(())
+
+          case s =>
+            println("Did not understand")
     else
       program.append(input)
       val result = if parseOrEvaluate.isLeft then

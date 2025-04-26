@@ -1,9 +1,9 @@
 package org.mikadocs.language.kamin
-package basic
+package lisp
 
 import org.mikadocs.language.workbench.{EvaluationResult, IntegerValue, Interpreter, LookaheadIterator, Node, NodeVisitor, ParseAndPrintResult, SourceReader, Token, visit}
 
-object basicPrinter extends Printer:
+object lispPrinter extends Printer:
   private val valueExpressionPrinter = ValueExpressionPrinter(this)
   private val variableExpressionPrinter = VariableExpressionPrinter()
   private val ifExpressionPrinter = IfExpressionPrinter(this)
@@ -12,6 +12,7 @@ object basicPrinter extends Printer:
   private val beginExpressionPrinter = BeginExpressionPrinter(this)
   private val operationExpressionPrinter = OperationExpressionPrinter(this)
   private val functionDefinitionPrinter = FunctionDefinitionPrinter(this)
+  private val sExpressionPrinter = SExpressionPrinter(this)
   
   override def visit(node: Node): String =
     val result = StringBuilder()
@@ -32,21 +33,24 @@ object basicPrinter extends Printer:
         operationExpressionPrinter.printNodeTo(n, result)
       case n:FunctionDefinitionNode =>
         functionDefinitionPrinter.printNodeTo(n, result)
+      case n:SExpressionNode =>
+        result.append("'")
+        sExpressionPrinter.printNodeTo(n, result)
     result.toString()
 
-object basicInterpreter extends Interpreter:
+object lispInterpreter extends Interpreter:
 
   override def interpret(program: String): EvaluationResult =
-    basicParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program)))).map(
-      ast => BasicEvaluator(BasicEvaluator.globalEnvironment).visit(ast) match {
+    lispParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program)))).map(
+      ast => LispEvaluator(LispEvaluator.globalEnvironment).visit(ast) match {
         case Left(error) => error
         case Right(result) => result.toString
       }
     )
 
   override def parseAndPrint(program: String): ParseAndPrintResult =
-    basicParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program)))).map(
-      ast => ast.visit(using basicPrinter)
+    lispParser.parse(Scanner().scan(KaminSourceReader(SourceReader(program)))).map(
+      ast => ast.visit(using lispPrinter)
     )
 
 

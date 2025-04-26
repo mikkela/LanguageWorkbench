@@ -1,9 +1,9 @@
 package org.mikadocs.language.kamin
-package basic
+package lisp
 
-import org.mikadocs.language.workbench.{IntegerValueExtension, LookaheadIterator, Parser, ParserResult, Success, Token, prepend}
+import org.mikadocs.language.workbench.{EndOfFileToken, IntegerValueExtension, LookaheadIterator, Parser, ParserResult, Success, Token, prepend}
 
-object basicParser extends Parser[ExpressionNode | FunctionDefinitionNode]:
+object lispParser extends Parser[ExpressionNode | FunctionDefinitionNode]:
   override def parse(tokens: LookaheadIterator[Token]): ParserResult[ExpressionNode | FunctionDefinitionNode] =
     tokens.lookahead(2) match
       case Seq(t1: LeftParenthesisToken, t2: DefineToken) =>
@@ -12,16 +12,18 @@ object basicParser extends Parser[ExpressionNode | FunctionDefinitionNode]:
         expressionParser.parse(tokens)
 
 object expressionParser extends ExpressionParser:
+  private val sExpressionParser = SExpressionParser()
   private val ifExpressionParser = IfExpressionParser(this)
   private val whileExpressionParser = WhileExpressionParser(this)
   private val setExpressionParser = SetExpressionParser(this)
   private val beginExpressionParser = BeginExpressionParser(this)
   private val operationExpressionParser = OperationExpressionParser(this)
-  
+
   override def parse(tokens: LookaheadIterator[Token]): ParserResult[ExpressionNode] =
-    matchToken[IntegerToken, NameToken, LeftParenthesisToken](tokens) match
+    matchToken[IntegerToken, NameToken, QuoteToken, LeftParenthesisToken](tokens) match
       case Some(t: IntegerToken) => Success(ValueExpressionNode(t.lexeme.toInt.toIntegerValue))
       case Some(t: NameToken) => Success(VariableExpressionNode(t.lexeme))
+      case Some(_: QuoteToken) => sExpressionParser.parse(tokens)
       case Some(_: LeftParenthesisToken) =>
         matchToken[IfToken, WhileToken, SetToken, BeginToken, OperatorToken, NameToken](tokens) match
           case Some(_: IfToken) => ifExpressionParser.parse(tokens)
