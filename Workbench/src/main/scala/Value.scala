@@ -2,7 +2,7 @@ package org.mikadocs.language.workbench
 
 trait Value
 
-case class IntegerValue(val value: Int) extends Value, Ordered[IntegerValue]:
+case class IntegerValue(value: Int) extends Value, Ordered[IntegerValue]:
   override def toString: String = value.toString
 
   override def compare(that: IntegerValue): Int =
@@ -14,13 +14,13 @@ object IntegerValue:
 implicit class IntegerValueExtension(val i: Int) extends AnyVal:
   def toIntegerValue: IntegerValue = IntegerValue(i)
 
-case class DoubleValue(val value: Double) extends Value:
+case class DoubleValue(value: Double) extends Value:
   override def toString: String = value.toString
 
 object DoubleValue:
   def unapply(v: DoubleValue): Option[Double] = Some(v.value)
   
-case class StringValue(val value: String) extends Value:
+case class StringValue(value: String) extends Value:
   override def toString: String = s"""$value"""
 
 

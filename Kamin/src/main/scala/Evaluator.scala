@@ -11,7 +11,7 @@ class FunctionDefinitionTable[TValue <: Value](val evaluatorProducer: EvaluatorP
   type Function = (Environment[TValue], Seq[TValue]) => Either[String, TValue]
   case class FunctionDefinitionEntry(numberOfArguments: Int,
                                      function: Function)
-  protected val table = mutable.HashMap[String, FunctionDefinitionEntry]()
+  protected val table:mutable.HashMap[String, FunctionDefinitionEntry] = mutable.HashMap[String, FunctionDefinitionEntry]()
 
   def register(functionDefinition: FunctionDefinitionNode): Unit =
     table.put(functionDefinition.function,

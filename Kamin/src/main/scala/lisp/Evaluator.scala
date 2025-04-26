@@ -31,7 +31,7 @@ object functionDefinitionTable extends FunctionDefinitionTable[Value](e => LispE
     (env, arguments) =>
       (arguments.head, arguments(1)) match
         case (v1: IntegerValue, v2: IntegerValue) => 
-          if (v2.value == 0) then
+          if v2.value == 0 then
             Left("Division with zero")
           else
             Right(IntegerValue(v1.value + v2.value))
@@ -71,7 +71,7 @@ object functionDefinitionTable extends FunctionDefinitionTable[Value](e => LispE
     (env, arguments) =>
       arguments.head match
         case ListValue(v) => 
-          if v.length > 0 then Right(v.head) else Left("The list is empty")
+          if v.nonEmpty then Right(v.head) else Left("The list is empty")
         case _ => Left("Invalid types")
   ))
 
@@ -79,7 +79,7 @@ object functionDefinitionTable extends FunctionDefinitionTable[Value](e => LispE
     (env, arguments) =>
       arguments.head match
         case ListValue(v) =>
-          if v.length > 0 then Right(ListValue(v.tail)) else Left("The list is empty")
+          if v.nonEmpty then Right(ListValue(v.tail)) else Left("The list is empty")
         case _ => Left("Invalid types")
   ))
 
@@ -110,7 +110,7 @@ object functionDefinitionTable extends FunctionDefinitionTable[Value](e => LispE
     (env, arguments) =>
       arguments.head match
         case ListValue(v) => 
-          if v.length > 0 then Right(SymbolValue.T) else Right(ListValue.nil)
+          if v.nonEmpty then Right(SymbolValue.T) else Right(ListValue.nil)
         case _ => Right(ListValue.nil)
   ))
 
@@ -118,7 +118,7 @@ object functionDefinitionTable extends FunctionDefinitionTable[Value](e => LispE
     (env, arguments) =>
       arguments.head match
         case ListValue(v) =>
-          if v.length == 0 then Right(SymbolValue.T) else Right(ListValue.nil)
+          if v.isEmpty then Right(SymbolValue.T) else Right(ListValue.nil)
         case _ => Right(ListValue.nil)
   ))
   
